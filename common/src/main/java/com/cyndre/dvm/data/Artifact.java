@@ -3,13 +3,31 @@ package com.cyndre.dvm.data;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 public class Artifact {
 	private long id;
 	
 	private String groupId;
 	private String artifactId;
 	private String version;
+
+	public Artifact() {
+		
+	}
 	
+	public Artifact(final String groupId, final String artifactId) {
+		this.groupId = groupId;
+		this.artifactId = artifactId;
+	}
+	
+	public Artifact(final String groupId, final String artifactId, final String version) {
+		this.groupId = groupId;
+		this.artifactId = artifactId;
+		this.version = version;
+	}
+	
+	@JsonIgnore
 	public long getId() {
 		return id;
 	}
