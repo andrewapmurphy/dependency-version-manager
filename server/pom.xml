@@ -16,6 +16,7 @@
 		<org.mybatis.mybatis>3.2.7</org.mybatis.mybatis>
 		<org.mybatis.mybatis-spring>1.2.2</org.mybatis.mybatis-spring>
 		<commons-dbcp.commons-dbcp.version>1.4</commons-dbcp.commons-dbcp.version>
+		<org.freemarker.freemarker.version>2.3.20</org.freemarker.freemarker.version>
 	</properties>
 
 	<build>
@@ -53,13 +54,13 @@
 			<version>${project.version}</version>
 			<type>pom</type>
 		</dependency>
-	
+
 		<dependency>
 			<groupId>${project.groupId}</groupId>
 			<artifactId>common</artifactId>
 			<version>${project.version}</version>
 		</dependency>
-	
+
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-core</artifactId>
@@ -74,6 +75,17 @@
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-jdbc</artifactId>
 			<version>${spring.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-context-support</artifactId>
+			<version>${spring.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.freemarker</groupId>
+			<artifactId>freemarker</artifactId>
+			<version>${org.freemarker.freemarker.version}</version>
 		</dependency>
 
 		<dependency>
