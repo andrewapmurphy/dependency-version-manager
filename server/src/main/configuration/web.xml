@@ -1,3 +1,4 @@
-<Context version="3.0" path="/dvm" docBase="C:\devel\projects\dependency-version-manager\server\target\server-0.0.1-SNAPSHOT">
-
+<Context path="/dvm" docBase="...">
+	<Environment name="jdbc.driver" value="org.h2.Driver" type="java.lang.String" />
+	<Environment name="jdbc.url" value="jdbc:h2:~/dvm" type="java.lang.String" />
 </Context>

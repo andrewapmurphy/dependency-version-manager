@@ -18,6 +18,7 @@
 	<modules>
 		<module>server</module>
 		<module>maven-plugin</module>
+		<module>common</module>
 	</modules>
 
 	<build>

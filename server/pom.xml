@@ -13,6 +13,10 @@
 	<properties>
 		<spring.version>4.0.5.RELEASE</spring.version>
 		<javax.servlet.javax.servlet-api.version>3.0.1</javax.servlet.javax.servlet-api.version>
+		<com.h2database.h2>1.4.178</com.h2database.h2>
+		<org.mybatis.mybatis>3.2.7</org.mybatis.mybatis>
+		<org.mybatis.mybatis-spring>1.2.2</org.mybatis.mybatis-spring>
+		<commons-dbcp.commons-dbcp.version>1.4</commons-dbcp.commons-dbcp.version>
 	</properties>
 
 	<build>
@@ -55,10 +59,41 @@
 			<version>${spring.version}</version>
 		</dependency>
 		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-jdbc</artifactId>
+			<version>${spring.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.h2database</groupId>
+			<artifactId>h2</artifactId>
+			<version>${com.h2database.h2}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.mybatis</groupId>
+			<artifactId>mybatis-spring</artifactId>
+			<version>${org.mybatis.mybatis-spring}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.mybatis</groupId>
+			<artifactId>mybatis</artifactId>
+			<version>${org.mybatis.mybatis}</version>
+		</dependency>
+
+
+		<dependency>
 			<groupId>javax.servlet</groupId>
 			<artifactId>javax.servlet-api</artifactId>
 			<version>${javax.servlet.javax.servlet-api.version}</version>
 			<scope>provided</scope>
 		</dependency>
+
+		<dependency>
+			<groupId>commons-dbcp</groupId>
+			<artifactId>commons-dbcp</artifactId>
+			<version>${commons-dbcp.commons-dbcp.version}</version>
+		</dependency>
+
 	</dependencies>
 </project>
