@@ -13,12 +13,15 @@
 
 		<junit.junit.version>4.10</junit.junit.version>
 		<org.apache.maven.plugins.maven-compiler-plugin>2.5.1</org.apache.maven.plugins.maven-compiler-plugin>
+		
+		<com.h2database.h2.version>1.4.178</com.h2database.h2.version>
 	</properties>
 
 	<modules>
 		<module>server</module>
 		<module>maven-plugin</module>
 		<module>common</module>
+		<module>migrations</module>
 	</modules>
 
 	<build>

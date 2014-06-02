@@ -1,4 +1,7 @@
 <Context path="/dvm" docBase="...">
-	<Environment name="jdbc.driver" value="org.h2.Driver" type="java.lang.String" />
-	<Environment name="jdbc.url" value="jdbc:h2:~/dvm" type="java.lang.String" />
+	<Parameter name="jdbc.driver" value="org.h2.Driver" type="java.lang.String" />
+	<Parameter name="jdbc.url" value="jdbc:h2:~/db/dvm" type="java.lang.String" />
+	
+	<Parameter name="jdbc.username" value="testuser" type="java.lang.String" />
+	<Parameter name="jdbc.password" value="notUsedInProd" type="java.lang.String" />
 </Context>

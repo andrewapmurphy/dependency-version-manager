@@ -1,0 +1,61 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<parent>
+	    <groupId>com.cyndre.dependency-version-manager</groupId>
+		<artifactId>parent</artifactId>
+		<version>0.0.1-SNAPSHOT</version>
+	</parent>
+
+	<modelVersion>4.0.0</modelVersion>
+	<artifactId>migrations</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<packaging>pom</packaging>
+
+	<properties>
+		<jdbc.driver>org.h2.Driver</jdbc.driver>
+		<jdbc.url>jdbc:h2:~/db/dvm</jdbc.url>
+		<jdbc.username>testuser</jdbc.username>
+		<jdbc.password>notUsedInProd</jdbc.password>
+		<org.mybatis.mybatis-migrations>3.2.0</org.mybatis.mybatis-migrations>
+		<com.carbonfive.db-support.db-migration-maven-plugin.version>0.9.9-m5</com.carbonfive.db-support.db-migration-maven-plugin.version>
+	</properties>
+	
+	<dependencies>
+		<dependency>
+			<groupId>org.mybatis</groupId>
+			<artifactId>mybatis-migrations</artifactId>
+			<version>${org.mybatis.mybatis-migrations}</version>
+		</dependency>
+	</dependencies>
+	
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>com.carbonfive.db-support</groupId>
+				<artifactId>db-migration-maven-plugin</artifactId>
+				<version>${com.carbonfive.db-support.db-migration-maven-plugin.version}</version>
+				<configuration>
+					<url>${jdbc.url}</url>
+					<driverClassName>${jdbc.driver}</driverClassName>
+					
+					<username>testuser</username>
+					<password>notUsedInProd</password>
+				</configuration>
+				<dependencies>
+					<dependency>
+						<groupId>com.h2database</groupId>
+						<artifactId>h2</artifactId>
+						<version>${com.h2database.h2.version}</version>
+					</dependency>
+				</dependencies>
+			</plugin>
+		</plugins>
+	</build>
+	
+	<pluginRepositories>
+		<pluginRepository>
+			<id>c5-public-repository</id>
+			<url>http://mvn.carbonfive.com/public</url>
+		</pluginRepository>
+	</pluginRepositories>
+</project>
