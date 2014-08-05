@@ -19,8 +19,8 @@ public class ProjectService {
 	
 	public Project create(final Project project) {
 		final Date now = Calendar.getInstance().getTime();
-		project.setFirstSeen(now);
-		project.setLastUpdated(now);
+		//project.setFirstSeen(now);
+		//project.setLastUpdated(now);
 		
 		projectMapper.add(project);
 		

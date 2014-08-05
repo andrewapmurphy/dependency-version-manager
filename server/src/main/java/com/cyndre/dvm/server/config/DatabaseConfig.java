@@ -30,7 +30,7 @@ public class DatabaseConfig {
 	private String jdbcUsername;
 	
 	@Value("${jdbc.password}")
-	private String jdbcPassword;	
+	private String jdbcPassword;
 	
 	@Bean()
 	protected SqlSessionFactory createSqlSessionFactory() {

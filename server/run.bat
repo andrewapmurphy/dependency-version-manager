@@ -1,4 +1,4 @@
-call mvn -f ../pom.xml clean install
+call mvn -f ../pom.xml clean install -U
 call mvn -f ../migrations/pom.xml db-migration:migrate
 
 pause

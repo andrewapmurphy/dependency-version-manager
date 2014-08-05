@@ -3,10 +3,8 @@ package com.cyndre.dvm.data;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
-public class Artifact {
-	private long id;
+public class Artifact implements Comparable<Artifact> {
+	
 	
 	private String groupId;
 	private String artifactId;
@@ -27,12 +25,8 @@ public class Artifact {
 		this.version = version;
 	}
 	
-	@JsonIgnore
-	public long getId() {
-		return id;
-	}
-	public void setId(final long projectId) {
-		this.id = projectId;
+	public Artifact(final Artifact artifact) {
+		this(artifact.groupId, artifact.artifactId, artifact.version);
 	}
 	
 	public String getVersion() {
@@ -83,5 +77,10 @@ public class Artifact {
 	@Override
 	public String toString() {
 		return this.getGroupId() + ":" + this.getArtifactId() + ":" + this.getVersion();
+	}
+
+	@Override
+	public int compareTo(Artifact o) {
+		return Comparators.ARTIFACT_COMPARATOR.compare(this, o);
 	}
 }

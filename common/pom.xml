@@ -25,5 +25,10 @@
 			<artifactId>jackson-core</artifactId>
 			<version>${com.fasterxml.jackson.core.jackson-core.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>org.apache.maven</groupId>
+			<artifactId>maven-artifact</artifactId>
+			<version>3.0</version>
+		</dependency>
 	</dependencies>
 </project>
