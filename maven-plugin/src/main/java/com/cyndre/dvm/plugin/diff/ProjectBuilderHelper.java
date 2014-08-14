@@ -8,14 +8,16 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.DefaultProjectBuildingRequest;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.ProjectBuilder;
+import org.apache.maven.project.ProjectBuildingRequest;
 import org.apache.maven.project.ProjectBuildingResult;
 
 public class ProjectBuilderHelper {
-	public static MavenProject buildProject(final ProjectBuilder pb, final File pomFile)
+	public static MavenProject buildProject(final ProjectBuilder pb, final ProjectBuildingRequest originalBuildingRequest, final File pomFile)
 	throws MojoExecutionException {
 		try {
-			final DefaultProjectBuildingRequest request = new DefaultProjectBuildingRequest();
+			final DefaultProjectBuildingRequest request = new DefaultProjectBuildingRequest(originalBuildingRequest);
 			request.setResolveDependencies(true);
+			request.setProject(null);
 			
 			final ProjectBuildingResult result = pb.build(pomFile, request);
 			
