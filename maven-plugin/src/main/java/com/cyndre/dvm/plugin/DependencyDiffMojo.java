@@ -105,8 +105,8 @@ public class DependencyDiffMojo extends AbstractMojo {
 		final ImmutableMap<String, Dependency> oldDependencies = getFilteredDependencyMap(oldProject);
 		final ImmutableMap<String, Dependency> newDependencies = getFilteredDependencyMap(newProject);
 		
-		getLog().info("Old: " + oldDependencies);
-		getLog().info("New: " + newDependencies);
+		getLog().debug("Old: " + toReadableString(oldDependencies.values()));
+		getLog().debug("New: " + toReadableString(newDependencies.values()));
 		
 		final MapDifference<String, Dependency> diff = Maps.difference(
 			oldDependencies,
@@ -154,6 +154,11 @@ public class DependencyDiffMojo extends AbstractMojo {
 		});
 		
 		return StringUtils.join(readableEntries.values(), "\n");
+	}
+	
+	private static final String toReadableString(final Collection<Dependency> deps) {
+		
+		return StringUtils.join(deps, "\n");
 	}
 	
 	private static final String versionlessKey(final Dependency dependency) {
