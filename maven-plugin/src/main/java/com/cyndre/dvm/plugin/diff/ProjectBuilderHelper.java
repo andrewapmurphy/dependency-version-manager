@@ -27,6 +27,8 @@ public class ProjectBuilderHelper {
 				throw new MojoExecutionException(buildProblemString(problems));
 			}
 			
+			result.getDependencyResolutionResult(). /// LEAVE OFF HERE 
+			
 			return result.getProject();
 		} catch (Exception e) {
 			throw new MojoExecutionException("Unable to build project: " + e.getMessage(), e);
