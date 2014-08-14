@@ -76,7 +76,6 @@ public class DependencyDiffMojo extends AbstractMojo {
 	private void output(final MapDifference<String, Dependency> diff, final String outputPath, final String oldBranch, final String newBranch)
 	throws MojoExecutionException {
 		final String outputStr = String.format(OUTPUT_FORMAT, "", oldBranch, newBranch)
-				+ "\n"
 				+ toReadableString(diff.entriesDiffering())
 				+ toReadableOnlyLeft(diff.entriesOnlyOnLeft())
 				+ toReadableOnlyRight(diff.entriesOnlyOnRight());
@@ -154,6 +153,10 @@ public class DependencyDiffMojo extends AbstractMojo {
 	}
 	
 	private static final String toReadableOnlyRight(final Map<String, Dependency> diff) {
+		if (diff == null || diff.isEmpty()) {
+			return "";
+		}
+		
 		final Map<String, String> readableEntries = Maps.transformEntries(diff, new Maps.EntryTransformer<String, Dependency, String>() {
 			@Override public String transformEntry(String key, Dependency dependency) {				
 				final String version = dependency != null ? dependency.getVersion() : NOT_PRESENT;
@@ -161,10 +164,14 @@ public class DependencyDiffMojo extends AbstractMojo {
 			}
 		});
 		
-		return StringUtils.join(readableEntries.values(), "\n");
+		return StringUtils.join(readableEntries.values(), "\n") + "\n";
 	}
 	
 	private static final String toReadableString(final Map<String, ValueDifference<Dependency>> diff) {
+		if (diff == null || diff.isEmpty()) {
+			return "";
+		}
+		
 		final Map<String, String> readableEntries = Maps.transformEntries(diff, new Maps.EntryTransformer<String, ValueDifference<Dependency>, String>() {
 			@Override public String transformEntry(String key, ValueDifference<Dependency> value) {				
 				final Dependency oldDependency = value.leftValue();
@@ -178,10 +185,14 @@ public class DependencyDiffMojo extends AbstractMojo {
 			}
 		});
 		
-		return StringUtils.join(readableEntries.values(), "\n");
+		return StringUtils.join(readableEntries.values(), "\n") + "\n";
 	}
 	
 	private static final String toReadableString(final Collection<Dependency> deps) {
+		if (deps == null || deps.isEmpty()) {
+			return "";
+		}
+		
 		return StringUtils.join(Collections2.transform(deps,
 			new Function<Dependency, String>() {
 				@Override public String apply(Dependency dep) {
@@ -189,7 +200,7 @@ public class DependencyDiffMojo extends AbstractMojo {
 				}
 			}),
 			"\n"
-		);
+		) + "\n";
 	}
 	
 	private static final String versionlessKey(final Dependency dependency) {
