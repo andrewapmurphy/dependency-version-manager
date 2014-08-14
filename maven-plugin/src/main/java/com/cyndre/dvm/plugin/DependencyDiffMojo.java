@@ -8,6 +8,7 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.ArtifactUtils;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.plugin.AbstractMojo;
@@ -111,6 +112,10 @@ public class DependencyDiffMojo extends AbstractMojo {
 		getLog().debug("Old: " + toReadableString(oldDependencies.values()));
 		getLog().debug("New: " + toReadableString(newDependencies.values()));
 		
+		
+		getLog().debug("Old Artifacts: " + toReadableArtifactString(oldProject.getArtifacts()));
+		getLog().debug("New Artifacts: " + toReadableArtifactString(newProject.getArtifacts()));
+		
 		final MapDifference<String, Dependency> diff = Maps.difference(
 			oldDependencies,
 			newDependencies,
@@ -204,7 +209,26 @@ public class DependencyDiffMojo extends AbstractMojo {
 		) + "\n";
 	}
 	
+	private static final String toReadableArtifactString(final Collection<Artifact> deps) {
+		if (deps == null || deps.isEmpty()) {
+			return "";
+		}
+		
+		return StringUtils.join(Collections2.transform(deps,
+			new Function<Artifact, String>() {
+				@Override public String apply(Artifact dep) {
+					return versionlessKey(dep) + ":" + dep.getVersion();
+				}
+			}),
+			"\n"
+		) + "\n";
+	}
+	
 	private static final String versionlessKey(final Dependency dependency) {
+		return ArtifactUtils.versionlessKey(dependency.getGroupId(), dependency.getArtifactId());
+	}
+	
+	private static final String versionlessKey(final Artifact dependency) {
 		return ArtifactUtils.versionlessKey(dependency.getGroupId(), dependency.getArtifactId());
 	}
 	
