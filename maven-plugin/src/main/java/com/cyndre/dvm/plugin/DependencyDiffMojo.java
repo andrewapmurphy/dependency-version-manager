@@ -43,6 +43,7 @@ requiresOnline=true)
 public class DependencyDiffMojo extends AbstractMojo {
 	private static final String NOT_PRESENT = "Not present";
 	private static final String OUTPUT_FORMAT = "%s\t%s\t\t%s";
+	private static final String EMPTY = "";
 	
 	@Parameter(
 		name="oldBranch", property="oldBranch", readonly=true, required=true
@@ -76,7 +77,9 @@ public class DependencyDiffMojo extends AbstractMojo {
 	throws MojoExecutionException {
 		final String outputStr = String.format(OUTPUT_FORMAT, "", oldBranch, newBranch)
 				+ "\n"
-				+ toReadableString(diff.entriesDiffering());
+				+ toReadableString(diff.entriesDiffering())
+				+ toReadableOnlyLeft(diff.entriesOnlyOnLeft())
+				+ toReadableOnlyRight(diff.entriesOnlyOnRight());
 		
 		getLog().info("Differences in versions:\n" + outputStr);
 		
@@ -137,6 +140,28 @@ public class DependencyDiffMojo extends AbstractMojo {
 				return versionlessKey(dependency);
 			}
 		});
+	}
+	
+	private static final String toReadableOnlyLeft(final Map<String, Dependency> diff) {
+		final Map<String, String> readableEntries = Maps.transformEntries(diff, new Maps.EntryTransformer<String, Dependency, String>() {
+			@Override public String transformEntry(String key, Dependency dependency) {				
+				final String version = dependency != null ? dependency.getVersion() : NOT_PRESENT;
+				return String.format(OUTPUT_FORMAT, key, version, EMPTY);
+			}
+		});
+		
+		return StringUtils.join(readableEntries.values(), "\n");
+	}
+	
+	private static final String toReadableOnlyRight(final Map<String, Dependency> diff) {
+		final Map<String, String> readableEntries = Maps.transformEntries(diff, new Maps.EntryTransformer<String, Dependency, String>() {
+			@Override public String transformEntry(String key, Dependency dependency) {				
+				final String version = dependency != null ? dependency.getVersion() : NOT_PRESENT;
+				return String.format(OUTPUT_FORMAT, key, EMPTY, version);
+			}
+		});
+		
+		return StringUtils.join(readableEntries.values(), "\n");
 	}
 	
 	private static final String toReadableString(final Map<String, ValueDifference<Dependency>> diff) {
