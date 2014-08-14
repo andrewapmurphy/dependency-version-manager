@@ -157,8 +157,14 @@ public class DependencyDiffMojo extends AbstractMojo {
 	}
 	
 	private static final String toReadableString(final Collection<Dependency> deps) {
-		
-		return StringUtils.join(deps, "\n");
+		return StringUtils.join(Collections2.transform(deps,
+			new Function<Dependency, String>() {
+				@Override public String apply(Dependency dep) {
+					return versionlessKey(dep) + ":" + dep.getVersion();
+				}
+			}),
+			"\n"
+		);
 	}
 	
 	private static final String versionlessKey(final Dependency dependency) {
