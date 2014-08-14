@@ -14,7 +14,10 @@ public class ProjectBuilderHelper {
 	public static MavenProject buildProject(final ProjectBuilder pb, final File pomFile)
 	throws MojoExecutionException {
 		try {
-			final ProjectBuildingResult result = pb.build(pomFile, new DefaultProjectBuildingRequest());
+			final DefaultProjectBuildingRequest request = new DefaultProjectBuildingRequest();
+			request.setResolveDependencies(true);
+			
+			final ProjectBuildingResult result = pb.build(pomFile, request);
 			
 			final Collection<ModelProblem> problems = result.getProblems();
 			

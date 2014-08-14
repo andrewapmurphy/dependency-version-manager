@@ -109,12 +109,8 @@ public class DependencyDiffMojo extends AbstractMojo {
 		final ImmutableMap<String, Dependency> oldDependencies = getFilteredDependencyMap(oldProject);
 		final ImmutableMap<String, Dependency> newDependencies = getFilteredDependencyMap(newProject);
 		
-		getLog().debug("Old: " + toReadableString(oldDependencies.values()));
-		getLog().debug("New: " + toReadableString(newDependencies.values()));
-		
-		
-		getLog().debug("Old Artifacts: " + toReadableArtifactString(oldProject.getArtifacts()));
-		getLog().debug("New Artifacts: " + toReadableArtifactString(newProject.getArtifacts()));
+		getLog().debug("Old Dependencies: " + toReadableString(oldDependencies.values()));
+		getLog().debug("New Dependencies: " + toReadableString(newDependencies.values()));
 		
 		final MapDifference<String, Dependency> diff = Maps.difference(
 			oldDependencies,
@@ -202,21 +198,6 @@ public class DependencyDiffMojo extends AbstractMojo {
 		return StringUtils.join(Collections2.transform(deps,
 			new Function<Dependency, String>() {
 				@Override public String apply(Dependency dep) {
-					return versionlessKey(dep) + ":" + dep.getVersion();
-				}
-			}),
-			"\n"
-		) + "\n";
-	}
-	
-	private static final String toReadableArtifactString(final Collection<Artifact> deps) {
-		if (deps == null || deps.isEmpty()) {
-			return "";
-		}
-		
-		return StringUtils.join(Collections2.transform(deps,
-			new Function<Artifact, String>() {
-				@Override public String apply(Artifact dep) {
 					return versionlessKey(dep) + ":" + dep.getVersion();
 				}
 			}),
