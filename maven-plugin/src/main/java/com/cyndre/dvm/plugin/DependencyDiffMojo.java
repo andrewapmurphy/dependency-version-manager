@@ -76,6 +76,7 @@ public class DependencyDiffMojo extends AbstractMojo {
 	private void output(final MapDifference<String, Dependency> diff, final String outputPath, final String oldBranch, final String newBranch)
 	throws MojoExecutionException {
 		final String outputStr = String.format(OUTPUT_FORMAT, "", oldBranch, newBranch)
+				+ "\n"
 				+ toReadableString(diff.entriesDiffering())
 				+ toReadableOnlyLeft(diff.entriesOnlyOnLeft())
 				+ toReadableOnlyRight(diff.entriesOnlyOnRight());
