@@ -21,7 +21,6 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.ProjectBuilder;
-import org.apache.maven.project.ProjectBuildingRequest;
 import org.codehaus.plexus.util.FileUtils;
 
 import com.cyndre.dvm.plugin.diff.DependencyComparator;
@@ -64,9 +63,6 @@ public class DependencyDiffMojo extends AbstractMojo {
 	
 	@Component
 	private ProjectBuilder mavenProjectBuilder;
-	
-	@Component
-	private ProjectBuildingRequest buildingRequest;
 	
 	@Parameter(defaultValue="${project}", readonly=true)
     private MavenProject thisProject;
@@ -131,7 +127,7 @@ public class DependencyDiffMojo extends AbstractMojo {
 
 		GitHelper.checkout(branch, projectPath, getLog());
 		
-		return ProjectBuilderHelper.buildProject(mavenProjectBuilder, buildingRequest, pomFile);
+		return ProjectBuilderHelper.buildProject(mavenProjectBuilder, thisProject.getProjectBuildingRequest(), pomFile);
 	}
 	
 	private static ImmutableMap<String, Dependency> getFilteredDependencyMap(final MavenProject project) {
