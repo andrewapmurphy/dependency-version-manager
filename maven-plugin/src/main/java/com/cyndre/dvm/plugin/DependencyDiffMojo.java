@@ -102,6 +102,8 @@ public class DependencyDiffMojo extends AbstractMojo {
 	
 	private MapDifference<String, String> simpleDependencyDiff(final File pomFile)
 	throws MojoExecutionException {
+		getLog().debug("Simple diff");
+		
 		final MavenProject oldProject = checkoutAndBuildMavenProject(pomFile, oldBranch);
 		final MavenProject newProject = checkoutAndBuildMavenProject(pomFile, newBranch);
 		
@@ -129,6 +131,8 @@ public class DependencyDiffMojo extends AbstractMojo {
 	
 	private MapDifference<String, String> complexDependencyDiff(final File pomFile)
 	throws MojoExecutionException {
+		getLog().debug("Complex diff");
+		
 		final MavenProject oldProject = checkoutAndBuildMavenProject(pomFile, oldBranch);
 		final Collection<Dependency> oldProjectSiblingModules = siblingModulesOfSameVersion(oldProject, oldProject.getDependencies());
 		final Map<String, String> oldDependencies = Maps.transformValues(
@@ -168,6 +172,8 @@ public class DependencyDiffMojo extends AbstractMojo {
 		try {
 			for (final Dependency sibling : siblings) {
 				final String fullName = Output.versionlessKey(sibling);
+				getLog().debug("Hashing sibling " + fullName);
+				
 				final String hash = hashSiblingModule(parentProjectDirectory, sibling);
 				
 				builder.put(fullName, hash);
