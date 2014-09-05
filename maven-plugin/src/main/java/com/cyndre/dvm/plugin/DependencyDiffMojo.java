@@ -229,10 +229,10 @@ public class DependencyDiffMojo extends AbstractMojo {
 	};
 	
 	
-	private static boolean isMultiModuleChild(final MavenProject project) {
+	private boolean isMultiModuleChild(final MavenProject project) {
 		final MavenProject parentProject = project.getParent();
 		
-		return project.getGroupId().equals(parentProject.getGroupId())
+		return parentProject != null && project.getGroupId().equals(parentProject.getGroupId())
 			&& parentProject.getModules().contains(project.getArtifactId());
 	}
 }
