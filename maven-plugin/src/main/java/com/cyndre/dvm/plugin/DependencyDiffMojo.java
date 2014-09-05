@@ -2,14 +2,11 @@ package com.cyndre.dvm.plugin;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.Collection;
-import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import org.apache.commons.lang3.StringUtils;
-import org.apache.maven.artifact.Artifact;
-import org.apache.maven.artifact.ArtifactUtils;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -27,12 +24,15 @@ import com.cyndre.dvm.plugin.diff.DependencyComparator;
 import com.cyndre.dvm.plugin.diff.DependencyEquivalence;
 import com.cyndre.dvm.plugin.diff.DiffFilters;
 import com.cyndre.dvm.plugin.diff.GitHelper;
+import com.cyndre.dvm.plugin.diff.Output;
 import com.cyndre.dvm.plugin.diff.ProjectBuilderHelper;
+import com.cyndre.dvm.plugin.diff.ProjectHasher;
+import com.cyndre.dvm.reporting.HashGenerator;
 import com.google.common.base.Function;
+import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.MapDifference;
-import com.google.common.collect.MapDifference.ValueDifference;
 import com.google.common.collect.Maps;
 
 @Mojo(name="diff",
@@ -42,9 +42,6 @@ requiresProject=true,
 threadSafe=true,
 requiresOnline=true)
 public class DependencyDiffMojo extends AbstractMojo {
-	private static final String NOT_PRESENT = "Not present";
-	private static final String OUTPUT_FORMAT = "%s\t%s\t\t%s";
-	private static final String EMPTY = "";
 	
 	@Parameter(
 		name="oldBranch", property="oldBranch", readonly=true, required=true
@@ -69,18 +66,21 @@ public class DependencyDiffMojo extends AbstractMojo {
 
 	@Override
 	public void execute() throws MojoExecutionException, MojoFailureException {
-		MapDifference<String, Dependency> diff = simpleDependencyDiff(thisProject.getFile());
+		MapDifference<String, Dependency> diff = isMultiModuleChild(thisProject)
+			? complexDependencyDiff(thisProject.getFile())
+			: simpleDependencyDiff(thisProject.getFile());
+		
 		
 		output(diff, output, oldBranch, newBranch);
 	}
 	
 	private void output(final MapDifference<String, Dependency> diff, final String outputPath, final String oldBranch, final String newBranch)
 	throws MojoExecutionException {
-		final String outputStr = String.format(OUTPUT_FORMAT, "", oldBranch, newBranch)
+		final String outputStr = String.format(Output.OUTPUT_FORMAT, "", oldBranch, newBranch)
 				+ "\n"
-				+ toReadableString(diff.entriesDiffering())
-				+ toReadableOnlyLeft(diff.entriesOnlyOnLeft())
-				+ toReadableOnlyRight(diff.entriesOnlyOnRight());
+				+ Output.toReadableString(diff.entriesDiffering())
+				+ Output.toReadableOnlyLeft(diff.entriesOnlyOnLeft())
+				+ Output.toReadableOnlyRight(diff.entriesOnlyOnRight());
 		
 		getLog().info("Differences in versions:\n" + outputStr);
 		
@@ -109,8 +109,8 @@ public class DependencyDiffMojo extends AbstractMojo {
 		final ImmutableMap<String, Dependency> oldDependencies = getFilteredDependencyMap(oldProject);
 		final ImmutableMap<String, Dependency> newDependencies = getFilteredDependencyMap(newProject);
 		
-		getLog().debug("Old Dependencies: " + toReadableString(oldDependencies.values()));
-		getLog().debug("New Dependencies: " + toReadableString(newDependencies.values()));
+		getLog().debug("Old Dependencies: " + Output.toReadableString(oldDependencies.values()));
+		getLog().debug("New Dependencies: " + Output.toReadableString(newDependencies.values()));
 		
 		final MapDifference<String, Dependency> diff = Maps.difference(
 			oldDependencies,
@@ -119,6 +119,71 @@ public class DependencyDiffMojo extends AbstractMojo {
 		);
 		
 		return diff;
+	}
+	
+	private MapDifference<String, Dependency> complexDependencyDiff(final File pomFile)
+	throws MojoExecutionException {
+		final MavenProject oldProject = checkoutAndBuildMavenProject(pomFile, oldBranch);
+		final Collection<Dependency> oldProjectSiblingModules = siblingModulesOfSameVersion(oldProject, oldProject.getDependencies());
+		final ImmutableMap<String, Dependency> oldDependencies = getFilteredDependencyMap(oldProject);
+		final ImmutableMap<String, String> oldSiblingModuleHashes = hashSiblingModules(pomFile, oldProjectSiblingModules);
+		
+		final MavenProject newProject = checkoutAndBuildMavenProject(pomFile, newBranch);
+		final Collection<Dependency> newProjectSiblingModules = siblingModulesOfSameVersion(newProject, oldProject.getDependencies());
+		final ImmutableMap<String, Dependency> newDependencies = getFilteredDependencyMap(newProject);	
+		final ImmutableMap<String, String> newSiblingModuleHashes = hashSiblingModules(pomFile, newProjectSiblingModules);
+		
+		getLog().debug("Old Dependencies: " + Output.toReadableString(oldDependencies.values()));
+		getLog().debug("New Dependencies: " + Output.toReadableString(newDependencies.values()));
+		
+		final MapDifference<String, Dependency> diff = Maps.difference(
+			oldDependencies,
+			newDependencies,
+			new DependencyEquivalence()
+		);
+		
+		return diff;
+	}
+	
+	private ImmutableMap<String, String> hashSiblingModules(final File projectPomFile, final Collection<Dependency> siblings)
+	throws MojoExecutionException {
+		final File parentProjectDirectory = projectPomFile.getParentFile().getParentFile();
+		
+		getLog().debug("Parent project path: " + parentProjectDirectory.getAbsolutePath());
+		
+		final ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
+		
+		try {
+			for (final Dependency sibling : siblings) {
+				final String fullName = Output.versionlessKey(sibling);
+				final String hash = hashSiblingModule(parentProjectDirectory, sibling);
+				
+				builder.put(fullName, hash);
+			}
+		} catch (IOException e) {
+			throw new MojoExecutionException("Error hashing siblings", e);
+		}
+		
+		return builder.build();
+	}
+	
+	private static final String hashSiblingModule(File parentProjectDirectory, final Dependency sibling)
+	throws IOException {
+		final File siblingProjectPath = Paths.get(parentProjectDirectory.toURI()).resolve(sibling.getArtifactId()).toFile();
+		
+		return ProjectHasher.hashDirectoryContents(siblingProjectPath);
+	}
+	
+	private Collection<Dependency> siblingModulesOfSameVersion(final MavenProject project, final Collection<Dependency> dependencies) {
+		return Collections2.filter(dependencies, new Predicate<Dependency>() {
+			@Override
+			public boolean apply(Dependency dep) {
+				return project.getGroupId().equals(dep.getGroupId())
+					&& project.getArtifactId().equals(dep.getArtifactId())
+					&& project.getVersion().equals(dep.getVersion())
+					&& DiffFilters.IS_NOT_TEST_SCOPE.apply(dep);
+			}
+		});
 	}
 	
 	private MavenProject checkoutAndBuildMavenProject(final File pomFile, final String branch)
@@ -138,82 +203,19 @@ public class DependencyDiffMojo extends AbstractMojo {
 
 		return Maps.uniqueIndex(sorted, new Function<Dependency, String>() {
 			@Override public String apply(Dependency dependency) {
-				return versionlessKey(dependency);
+				return Output.versionlessKey(dependency);
 			}
 		});
 	}
 	
-	private static final String toReadableOnlyLeft(final Map<String, Dependency> diff) {
-		final Map<String, String> readableEntries = Maps.transformEntries(diff, new Maps.EntryTransformer<String, Dependency, String>() {
-			@Override public String transformEntry(String key, Dependency dependency) {				
-				final String version = dependency != null ? dependency.getVersion() : NOT_PRESENT;
-				return String.format(OUTPUT_FORMAT, key, version, EMPTY);
-			}
-		});
-		
-		return StringUtils.join(readableEntries.values(), "\n");
-	}
 	
-	private static final String toReadableOnlyRight(final Map<String, Dependency> diff) {
-		if (diff == null || diff.isEmpty()) {
-			return "";
-		}
-		
-		final Map<String, String> readableEntries = Maps.transformEntries(diff, new Maps.EntryTransformer<String, Dependency, String>() {
-			@Override public String transformEntry(String key, Dependency dependency) {				
-				final String version = dependency != null ? dependency.getVersion() : NOT_PRESENT;
-				return String.format(OUTPUT_FORMAT, key, EMPTY, version);
-			}
-		});
-		
-		return StringUtils.join(readableEntries.values(), "\n") + "\n";
-	}
 	
-	private static final String toReadableString(final Map<String, ValueDifference<Dependency>> diff) {
-		if (diff == null || diff.isEmpty()) {
-			return "";
-		}
+	
+	
+	private static boolean isMultiModuleChild(final MavenProject project) {
+		final MavenProject parentProject = project.getParent();
 		
-		final Map<String, String> readableEntries = Maps.transformEntries(diff, new Maps.EntryTransformer<String, ValueDifference<Dependency>, String>() {
-			@Override public String transformEntry(String key, ValueDifference<Dependency> value) {				
-				final Dependency oldDependency = value.leftValue();
-				final String oldVersion = oldDependency != null ? oldDependency.getVersion() : NOT_PRESENT;
-				
-				final Dependency newDependency = value.rightValue();
-				final String newVersion = newDependency != null ? newDependency.getVersion() : NOT_PRESENT;
-				
-				
-				return String.format(OUTPUT_FORMAT, key, oldVersion, newVersion);
-			}
-		});
-		
-		return StringUtils.join(readableEntries.values(), "\n") + "\n";
-	}
-	
-	private static final String toReadableString(final Collection<Dependency> deps) {
-		if (deps == null || deps.isEmpty()) {
-			return "";
-		}
-		
-		return StringUtils.join(Collections2.transform(deps,
-			new Function<Dependency, String>() {
-				@Override public String apply(Dependency dep) {
-					return versionlessKey(dep) + ":" + dep.getVersion();
-				}
-			}),
-			"\n"
-		) + "\n";
-	}
-	
-	private static final String versionlessKey(final Dependency dependency) {
-		return ArtifactUtils.versionlessKey(dependency.getGroupId(), dependency.getArtifactId());
-	}
-	
-	private static final String versionlessKey(final Artifact dependency) {
-		return ArtifactUtils.versionlessKey(dependency.getGroupId(), dependency.getArtifactId());
-	}
-	
-	private static boolean isMultiModule(final MavenProject project) {
-		return !project.getModules().isEmpty();
+		return project.getGroupId().equals(parentProject.getGroupId())
+			&& parentProject.getModules().contains(project.getArtifactId());
 	}
 }
