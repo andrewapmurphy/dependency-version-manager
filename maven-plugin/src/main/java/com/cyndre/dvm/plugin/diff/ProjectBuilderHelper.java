@@ -27,7 +27,8 @@ public class ProjectBuilderHelper {
 				throw new MojoExecutionException(buildProblemString(problems));
 			}
 			
-			result.getDependencyResolutionResult(). /// LEAVE OFF HERE 
+			result.getDependencyResolutionResult(); 
+			//http://docs.codehaus.org/display/MAVENUSER/Mojo+Developer+Cookbook
 			
 			return result.getProject();
 		} catch (Exception e) {
