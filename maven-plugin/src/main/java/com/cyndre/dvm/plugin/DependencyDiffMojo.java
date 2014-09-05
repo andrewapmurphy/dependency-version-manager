@@ -196,6 +196,10 @@ public class DependencyDiffMojo extends AbstractMojo {
 		return Collections2.filter(dependencies, new Predicate<Dependency>() {
 			@Override
 			public boolean apply(Dependency dep) {
+				getLog().info(project.getGroupId() + " " + dep.getGroupId());
+				getLog().info(project.getArtifactId() + " " + dep.getArtifactId());
+				getLog().info(project.getVersion() + " " + dep.getVersion());
+				
 				return project.getGroupId().equals(dep.getGroupId())
 					&& project.getArtifactId().equals(dep.getArtifactId())
 					&& project.getVersion().equals(dep.getVersion())
