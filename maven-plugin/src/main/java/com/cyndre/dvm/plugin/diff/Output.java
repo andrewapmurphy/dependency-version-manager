@@ -18,46 +18,42 @@ public class Output {
 	public static final String OUTPUT_FORMAT = "%s\t%s\t\t%s";
 	private static final String EMPTY = "";
 	
-	public static final String toReadableOnlyLeft(final Map<String, Dependency> diff) {
-		final Map<String, String> readableEntries = Maps.transformEntries(diff, new Maps.EntryTransformer<String, Dependency, String>() {
-			@Override public String transformEntry(String key, Dependency dependency) {				
-				final String version = dependency != null ? dependency.getVersion() : NOT_PRESENT;
-				return String.format(OUTPUT_FORMAT, key, version, EMPTY);
+	public static final String toReadableOnlyLeft(final Map<String, String> diff) {
+		final Map<String, String> readableEntries = Maps.transformEntries(diff, new Maps.EntryTransformer<String, String, String>() {
+			@Override public String transformEntry(String key, String version) {				
+				final String strVersion = (version != null ? version : NOT_PRESENT);
+				return String.format(OUTPUT_FORMAT, key, strVersion, EMPTY);
 			}
 		});
 		
 		return StringUtils.join(readableEntries.values(), "\n");
 	}
 	
-	public static final String toReadableOnlyRight(final Map<String, Dependency> diff) {
+	public static final String toReadableOnlyRight(final Map<String, String> diff) {
 		if (diff == null || diff.isEmpty()) {
 			return "";
 		}
 		
-		final Map<String, String> readableEntries = Maps.transformEntries(diff, new Maps.EntryTransformer<String, Dependency, String>() {
-			@Override public String transformEntry(String key, Dependency dependency) {				
-				final String version = dependency != null ? dependency.getVersion() : NOT_PRESENT;
-				return String.format(OUTPUT_FORMAT, key, EMPTY, version);
+		final Map<String, String> readableEntries = Maps.transformEntries(diff, new Maps.EntryTransformer<String, String, String>() {
+			@Override public String transformEntry(final String key, final String version) {				
+				final String strVersion = (version != null ? version : NOT_PRESENT);
+				return String.format(OUTPUT_FORMAT, key, EMPTY, strVersion);
 			}
 		});
 		
 		return StringUtils.join(readableEntries.values(), "\n") + "\n";
 	}
 	
-	public static final String toReadableString(final Map<String, ValueDifference<Dependency>> diff) {
+	public static final String toReadableString(final Map<String, ValueDifference<String>> diff) {
 		if (diff == null || diff.isEmpty()) {
 			return "";
 		}
 		
-		final Map<String, String> readableEntries = Maps.transformEntries(diff, new Maps.EntryTransformer<String, ValueDifference<Dependency>, String>() {
-			@Override public String transformEntry(String key, ValueDifference<Dependency> value) {				
-				final Dependency oldDependency = value.leftValue();
-				final String oldVersion = oldDependency != null ? oldDependency.getVersion() : NOT_PRESENT;
-				
-				final Dependency newDependency = value.rightValue();
-				final String newVersion = newDependency != null ? newDependency.getVersion() : NOT_PRESENT;
-				
-				
+		final Map<String, String> readableEntries = Maps.transformEntries(diff, new Maps.EntryTransformer<String, ValueDifference<String>, String>() {
+			@Override public String transformEntry(String key, ValueDifference<String> value) {				
+				final String oldVersion = value.leftValue()  != null ? value.leftValue()  : NOT_PRESENT;
+				final String newVersion = value.rightValue() != null ? value.rightValue() : NOT_PRESENT;
+
 				return String.format(OUTPUT_FORMAT, key, oldVersion, newVersion);
 			}
 		});
@@ -65,8 +61,9 @@ public class Output {
 		return StringUtils.join(readableEntries.values(), "\n") + "\n";
 	}
 	
-	public static final String toReadableString(final Collection<Dependency> deps) {
-		if (deps == null || deps.isEmpty()) {
+	public static final String toReadableString(final Collection<String> deps) {
+		return "";
+		/*if (deps == null || deps.isEmpty()) {
 			return "";
 		}
 		
@@ -77,7 +74,7 @@ public class Output {
 				}
 			}),
 			"\n"
-		) + "\n";
+		) + "\n";*/
 	}
 	
 	public static final String versionlessKey(final Dependency dependency) {

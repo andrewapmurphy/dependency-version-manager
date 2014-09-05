@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.Collection;
+import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
@@ -21,13 +22,11 @@ import org.apache.maven.project.ProjectBuilder;
 import org.codehaus.plexus.util.FileUtils;
 
 import com.cyndre.dvm.plugin.diff.DependencyComparator;
-import com.cyndre.dvm.plugin.diff.DependencyEquivalence;
 import com.cyndre.dvm.plugin.diff.DiffFilters;
 import com.cyndre.dvm.plugin.diff.GitHelper;
 import com.cyndre.dvm.plugin.diff.Output;
 import com.cyndre.dvm.plugin.diff.ProjectBuilderHelper;
 import com.cyndre.dvm.plugin.diff.ProjectHasher;
-import com.cyndre.dvm.reporting.HashGenerator;
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
@@ -66,7 +65,7 @@ public class DependencyDiffMojo extends AbstractMojo {
 
 	@Override
 	public void execute() throws MojoExecutionException, MojoFailureException {
-		MapDifference<String, Dependency> diff = isMultiModuleChild(thisProject)
+		MapDifference<String, String> diff = isMultiModuleChild(thisProject)
 			? complexDependencyDiff(thisProject.getFile())
 			: simpleDependencyDiff(thisProject.getFile());
 		
@@ -74,7 +73,7 @@ public class DependencyDiffMojo extends AbstractMojo {
 		output(diff, output, oldBranch, newBranch);
 	}
 	
-	private void output(final MapDifference<String, Dependency> diff, final String outputPath, final String oldBranch, final String newBranch)
+	private void output(final MapDifference<String, String> diff, final String outputPath, final String oldBranch, final String newBranch)
 	throws MojoExecutionException {
 		final String outputStr = String.format(Output.OUTPUT_FORMAT, "", oldBranch, newBranch)
 				+ "\n"
@@ -101,45 +100,58 @@ public class DependencyDiffMojo extends AbstractMojo {
 		}
 	}
 	
-	private MapDifference<String, Dependency> simpleDependencyDiff(final File pomFile)
+	private MapDifference<String, String> simpleDependencyDiff(final File pomFile)
 	throws MojoExecutionException {
 		final MavenProject oldProject = checkoutAndBuildMavenProject(pomFile, oldBranch);
 		final MavenProject newProject = checkoutAndBuildMavenProject(pomFile, newBranch);
 		
-		final ImmutableMap<String, Dependency> oldDependencies = getFilteredDependencyMap(oldProject);
-		final ImmutableMap<String, Dependency> newDependencies = getFilteredDependencyMap(newProject);
+		final ImmutableMap<String, String> oldDependencies = ImmutableMap.copyOf(
+			Maps.transformValues(
+				getFilteredDependencyMap(oldProject), DEPENDENCY_TO_VERSION
+			)
+		);
+		final ImmutableMap<String, String> newDependencies = ImmutableMap.copyOf(
+			Maps.transformValues(
+				getFilteredDependencyMap(newProject), DEPENDENCY_TO_VERSION
+			)
+		);	
 		
 		getLog().debug("Old Dependencies: " + Output.toReadableString(oldDependencies.values()));
 		getLog().debug("New Dependencies: " + Output.toReadableString(newDependencies.values()));
 		
-		final MapDifference<String, Dependency> diff = Maps.difference(
+		final MapDifference<String, String> diff = Maps.difference(
 			oldDependencies,
-			newDependencies,
-			new DependencyEquivalence()
+			newDependencies
 		);
 		
 		return diff;
 	}
 	
-	private MapDifference<String, Dependency> complexDependencyDiff(final File pomFile)
+	private MapDifference<String, String> complexDependencyDiff(final File pomFile)
 	throws MojoExecutionException {
 		final MavenProject oldProject = checkoutAndBuildMavenProject(pomFile, oldBranch);
 		final Collection<Dependency> oldProjectSiblingModules = siblingModulesOfSameVersion(oldProject, oldProject.getDependencies());
-		final ImmutableMap<String, Dependency> oldDependencies = getFilteredDependencyMap(oldProject);
+		final Map<String, String> oldDependencies = Maps.transformValues(
+			getFilteredDependencyMap(oldProject), DEPENDENCY_TO_VERSION
+		);
 		final ImmutableMap<String, String> oldSiblingModuleHashes = hashSiblingModules(pomFile, oldProjectSiblingModules);
+		oldDependencies.putAll(oldSiblingModuleHashes);
 		
 		final MavenProject newProject = checkoutAndBuildMavenProject(pomFile, newBranch);
 		final Collection<Dependency> newProjectSiblingModules = siblingModulesOfSameVersion(newProject, oldProject.getDependencies());
-		final ImmutableMap<String, Dependency> newDependencies = getFilteredDependencyMap(newProject);	
+		final Map<String, String> newDependencies = Maps.transformValues(
+			getFilteredDependencyMap(newProject), DEPENDENCY_TO_VERSION
+		);
 		final ImmutableMap<String, String> newSiblingModuleHashes = hashSiblingModules(pomFile, newProjectSiblingModules);
+		newDependencies.putAll(newSiblingModuleHashes);
+		
 		
 		getLog().debug("Old Dependencies: " + Output.toReadableString(oldDependencies.values()));
 		getLog().debug("New Dependencies: " + Output.toReadableString(newDependencies.values()));
 		
-		final MapDifference<String, Dependency> diff = Maps.difference(
+		final MapDifference<String, String> diff = Maps.difference(
 			oldDependencies,
-			newDependencies,
-			new DependencyEquivalence()
+			newDependencies
 		);
 		
 		return diff;
@@ -209,7 +221,12 @@ public class DependencyDiffMojo extends AbstractMojo {
 	}
 	
 	
-	
+	private static final Function<Dependency, String> DEPENDENCY_TO_VERSION = new Function<Dependency, String>() {
+		@Override
+		public String apply(Dependency d) {
+			return d.getVersion();
+		}
+	};
 	
 	
 	private static boolean isMultiModuleChild(final MavenProject project) {
